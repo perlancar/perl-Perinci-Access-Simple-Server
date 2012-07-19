@@ -213,12 +213,14 @@ sub _main_loop {
                     state => "R",
                 });
                 $self->{_start_req_time} = [gettimeofday];
-                my $line = <$sock>;
+                my $line = $sock->getline;
+                $log->tracef("Read line from client: %s", $line);
                 last REQ unless $line;
                 if ($line =~ /\AJ(\d+)/) {
-                    sysread $sock, $self->{_req_json}, $1;
+                    $sock->sysread($self->{_req_json}, $1);
+                    #$log->tracef("Read $1 bytes from client: %s", $self->{_req_json});
                     eval { $self->{_req} = $json->decode($self->{_req_json}) };
-                    <$sock>; # read CRLF that ends request
+                    $sock->getline; # read CRLF that ends request
                     my $e = $@;
                     $self->{_finish_req_time} = [gettimeofday];
                     if ($e) {
@@ -230,7 +232,6 @@ sub _main_loop {
                         goto FINISH_REQ;
                     }
                     $self->{_start_res_time}  = [gettimeofday];
-                    use Data::Dump; dd $self->{_req};
                     $self->{_res} = $self->_pa->request(
                         $self->{_req}{action} => $self->{_req}{uri},
                         $self->{_req});
@@ -267,8 +268,8 @@ sub _write_sock {
     # SSL sockets which might have smaller buffer size (like 16k)
     my $tot_written = 0;
     while (1) {
-        my $written = syswrite $sock, $buffer, length($buffer)-$tot_written,
-            $tot_written;
+        my $written = $sock->syswrite(
+            $buffer, length($buffer)-$tot_written, $tot_written);
         # XXX what to do on error, i.e. $written is undef?
         $tot_written += $written;
         last unless $tot_written < length($buffer);
