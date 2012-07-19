@@ -73,6 +73,10 @@ _
             summary => 'If true, will daemonize into background',
             arg_aliases => {D=>{}},
         },
+        fork => {
+            schema => ['bool' => {default=>1}],
+            summary => 'Set to false to disable forking',
+        },
     },
 };
 sub serve {
@@ -110,6 +114,7 @@ sub serve {
         daemonize       => $args{daemonize} // 0,
         scoreboard_path => 0,
         access_log_path => $access_log_path,
+        start_servers   => ($args{fork} // 1) ? undef : 0,
     );
     $server->run;
 
