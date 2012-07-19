@@ -221,8 +221,9 @@ sub _main_loop {
                 $log->tracef("Read line from client: %s", $line);
                 last REQ unless $line;
                 if ($line =~ /\AJ(\d+)/) {
-                    $sock->sysread($self->{_req_json}, $1);
-                    #$log->tracef("Read $1 bytes from client: %s", $self->{_req_json});
+                    $log->tracef("Reading $1 bytes from client ...");
+                    $sock->read($self->{_req_json}, $1);
+                    $log->tracef("Read $1 bytes from client: %s", $self->{_req_json});
                     eval { $self->{_req} = $json->decode($self->{_req_json}) };
                     $sock->getline; # read CRLF that ends request
                     my $e = $@;
@@ -268,6 +269,7 @@ sub _main_loop {
 
 sub _write_sock {
     my ($self, $sock, $buffer) = @_;
+    $log->tracef("Sending to client: %s", $buffer);
     # large $buffer might need to be written in several steps, especially in
     # SSL sockets which might have smaller buffer size (like 16k)
     my $tot_written = 0;
