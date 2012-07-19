@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use Log::Any qw($log);
+
+use File::HomeDir;
+use Module::List qw(list_modules);
+use Module::Load;
+use Perinci::Access::TCP::Server;
+use Perinci::CmdLine ();
+use Perinci::Gen::ForModule qw(gen_meta_for_module);
+
+# VERSION
+
+our %SPEC;
+
+$SPEC{serve} = {
+    v => 1.1,
+    summary => 'Serve Perl modules using Riap::TCP protocol',
+    description => <<'_',
+
+This is a simple command-line front-end for Perinci::Acces::TCP::Server, for
+making Perl modules accessible over TCP port (or Unix socket), using the
+Riap::TCP protocol. First the specified Perl modules will be loaded. Modules
+which do not contain Rinci metadata will be equipped with metadata using
+Perinci::Sub::Gen::ForModule. Perl modules not specified in the command-line
+arguments will not be accessible, since Perinci::Access::InProcess is used with
+load=>0.
+
+Modules can be accessed with Riap clients such as Perinci::Access using URL:
+
+ riap+tcp://HOSTNAME:PORT/MODULE/SUBMOD/FUNCTION
+ riap+tcp:UNIX_SOCKET_PATH/MODULE/SUBMOD/FUNCTION
+
+_
+    args => {
+        modules => {
+            schema => ['array*' => {of => 'str*', min_len => 1}],
+            req => 1,
+            pos => 0,
+            greedy => 1,
+            summary => 'List of modules to load',
+            description => <<'_',
+
+Either specify exact module name or one using wildcard (e.g. 'Foo::Bar::*', in
+which Module::List will be used to load all modules under 'Foo::Bar::').
+
+_
+        },
+        access_log_path => {
+            schema => 'str',
+            summary => 'Path for access log file',
+            description => <<'_',
+
+Default is ~/peri-tcpserve-access.log
+
+_
+        },
+        ports => {
+            schema => 'str*',
+            summary => 'Will be passed to Perinci::Access::TCP::Server',
+            cmdline_aliases => {p=>{}},
+        },
+        unix_sockets => {
+            schema => 'str*',
+            summary => 'Will be passed to Perinci::Access::TCP::Server',
+            cmdline_aliases => {s=>{}},
+        },
+        daemonize => {
+            schema => ['bool' => {default=>0}],
+            summary => 'If true, will daemonize into background',
+            arg_aliases => {D=>{}},
+        },
+    },
+};
+sub serve {
+    $log->infof("Starting server ...");
+    my %args = @_;
+
+    return [400, "Please specify at least 1 module"]
+        unless $args{modules} && @{$args{modules}};
+    return [400, "Please specify at least port or Unix socket"]
+        unless $args{ports} || $args{unix_sockets};
+
+    my $access_log_path = $args{access_log_path} //
+        File::HomeDir->my_home . "/peri-tcpserve-access.log";
+
+    my @modules;
+    for my $m (@{$args{modules}}) {
+        if ($m =~ /(.+::)\*$/) {
+            my $res = list_modules($1, {list_modules=>1});
+            push @modules, keys %$res;
+        } else {
+            push @modules, $m;
+        }
+    }
+    $log->debugf("Modules to load: %s", \@modules);
+    for my $m (@modules) {
+        $log->infof("Loading module %s ...", $m);
+        eval { load $m };
+        return [500, "Failed to load module $m: $@"] if $@;
+        gen_meta_for_module(module=>$m, load=>0);
+    }
+
+    my $server = Perinci::Access::TCP::Server->new(
+        ports           => $args{ports},
+        unix_sockets    => $args{unix_sockets},
+        daemonize       => $args{daemonize} // 0,
+        scoreboard_path => 0,
+        access_log_path => $access_log_path,
+    );
+    $server->run;
+
+    [200, "OK"];
+}
+
+Perinci::CmdLine->new(url => '/main/serve')->run;
+
+1;
+#ABSTRACT: Serve Perl modules using the Riap::TCP protocol
+#PODNAME: peri-tcpserver
+
+=head1 SYNOPSIS
+
+ # serve modules
+ % peri-tcpserve -p 127.0.0.1:5678 -s /path/to/unix/sock Foo::Bar Baz::*
+
+ # access the server
+ % perl -MPerinci::Access -e'
+     my $pa = Perinci::Access->new;
+     my $res = $pa->request(call=>"riap+tcp://localhost:5678/Foo/Bar/func1",
+                            {args=>{a1=>1, a2=>2}});'
+     my $res = $pa->request(meta=>"riap+tcp:path/to/unix/sock//Baz/Qux/func2");'
+
+ # see more options
+ % peri-tcpserve --help
+
+
+=head1 SEE ALSO
+
+L<Riap::TCP>, L<Riap>, L<Rinci>
+
+L<Perinci::Access::TCP::Client>, L<Perinci::Access>
+
+=cut
