@@ -1,5 +1,16 @@
 Revision history for Perinci-Access-TCP-Server
 
+0.02    2012-07-19 (SHARYANTO)
+
+        [ENHANCEMENTS]
+
+        - peri-tcpserve: Add option --nofork (for debugging)
+
+        [BUG FIXES]
+
+        - Don't mix buffered and unbuffered write.
+
+
 0.01    2012-07-19 (SHARYANTO)
 
         First release, proof of concept.
