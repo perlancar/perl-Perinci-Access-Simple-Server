@@ -1,5 +1,10 @@
 Revision history for Perinci-Access-TCP-Server
 
+0.04    2012-07-25 (SHARYANTO)
+
+        Fix: don't mix buffered and unbuffered I/O, use unbuffered.
+
+
 0.03    2012-07-20 (SHARYANTO)
 
         No functional changes. Add missing deps [CT].
