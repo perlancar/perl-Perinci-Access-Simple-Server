@@ -209,6 +209,12 @@ sub _main_loop {
             next unless $sock;
             $self->{_connect_time} = [gettimeofday];
             $self->_set_label_serving($sock);
+
+            my $timeout = ${*$sock}{'io_socket_timeout'};
+            my $fdset = "";
+            vec($fdset, $sock->fileno, 1) = 1;
+            my $buf = "";
+
           REQ:
             while (1) {
                 $self->_daemon->update_scoreboard({
@@ -216,41 +222,56 @@ sub _main_loop {
                     num_reqs => $i,
                     state => "R",
                 });
+
                 $self->{_start_req_time} = [gettimeofday];
-                my $line = $sock->getline;
-                $log->tracef("Read line from client: %s", $line);
-                last REQ unless $line;
-                if ($line =~ /\AJ(\d+)/) {
-                    $log->tracef("Reading $1 bytes from client ...");
-                    $sock->read($self->{_req_json}, $1);
-                    $log->tracef("Read $1 bytes from client: %s", $self->{_req_json});
-                    eval { $self->{_req} = $json->decode($self->{_req_json}) };
-                    $sock->getline; # read CRLF that ends request
-                    my $e = $@;
-                    $self->{_finish_req_time} = [gettimeofday];
-                    if ($e) {
-                        $self->{_res} = [400, "Invalid JSON ($e)"];
+              READ_REQ:
+                while (1) {
+                    # loop until we have the whole request in $buf
+                    $buf =~ s/\A(?:\015?\012)+//;  # ignore leading blank lines
+                    #$log->tracef("buf=%s (%d bytes)", $buf, length($buf));
+                    if ($buf =~ /\Aj(.*)\015?\012/) {
+                        $self->{_req_json} = $1;
+                        $buf = substr($buf, 1+length($1));
+                        last READ_REQ;
+                    } elsif ($buf =~ /\AJ(\d+)(\015?\012)(.+)\015?\012/s
+                                 && length($3) >= $1) {
+                        $self->{_req_json} = substr($3, 0, $1);
+                        $buf = substr($buf, 1+length($1)+length($2)+length($3));
+                        last READ_REQ;
+                    } elsif ($buf =~ /\A[^jJ].*/) {
+                        $self->{_finish_req_time} = [gettimeofday];
+                        $self->{_res} = [400, "Invalid request line"];
+                        $buf =~ s/\A.+//;
                         goto FINISH_REQ;
                     }
-                    if (ref($self->{_req}) ne 'HASH') {
-                        $self->{_res} = [400, "Invalid request (not hash)"];
-                        goto FINISH_REQ;
-                    }
-                    $self->{_start_res_time}  = [gettimeofday];
-                    $self->{_res} = $self->_pa->request(
-                        $self->{_req}{action} => $self->{_req}{uri},
-                        $self->{_req});
-                    $self->{_finish_res_time} = [gettimeofday];
-                } else {
-                    $self->{_finish_req_time} = [gettimeofday];
-                    $self->{_res} = [400, "Invalid request line"];
+                    last REQ unless $self->_need_more(
+                        $sock, $buf, $timeout, $fdset);
+                }
+                $self->{_finish_req_time} = [gettimeofday];
+
+                eval { $self->{_req} = $json->decode($self->{_req_json}) };
+                my $e = $@;
+                if ($e) {
+                    $self->{_res} = [400, "Invalid JSON ($e)"];
                     goto FINISH_REQ;
                 }
+                if (ref($self->{_req}) ne 'HASH') {
+                    $self->{_res} = [400, "Invalid request (not hash)"];
+                    goto FINISH_REQ;
+                }
+
+              RES:
+                $self->{_start_res_time}  = [gettimeofday];
+                $self->{_res} = $self->_pa->request(
+                    $self->{_req}{action} => $self->{_req}{uri},
+                    $self->{_req});
+                $self->{_finish_res_time} = [gettimeofday];
+
               FINISH_REQ:
                 $self->_daemon->update_scoreboard({state => "W"});
                 my $res;
                 eval { $self->{_res_json} = $json->encode($self->{_res}) };
-                my $e = $@;
+                $e = $@;
                 if ($e) {
                     $self->{_res} = [500, "Can't encode result in JSON: $e"];
                     $res = $json->encode($self->{_res});
@@ -265,6 +286,25 @@ sub _main_loop {
             $sock->close;
         }
     }
+}
+
+sub _need_more {
+    my $self = shift;
+    my $sock = shift;
+    #my($buf,$timeout,$fdset) = @_;
+    if ($_[1]) {
+	my($timeout, $fdset) = @_[1,2];
+	#print STDERR "select(,,,$timeout)\n" if $DEBUG;
+	my $n = select($fdset,undef,undef,$timeout);
+	unless ($n) {
+	    #$self->reason(defined($n) ? "Timeout" : "select: $!");
+	    return;
+	}
+    }
+    #print STDERR "sysread()\n" if $DEBUG;
+    my $n = sysread($sock, $_[0], 2048, length($_[0]));
+    #$self->reason(defined($n) ? "Client closed" : "sysread: $!") unless $n;
+    $n;
 }
 
 sub _write_sock {
