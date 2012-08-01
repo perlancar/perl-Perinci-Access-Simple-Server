@@ -1,5 +1,11 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.07    2012-08-01 (SHARYANTO)
+
+        No functional changes. Add missing dependency for bin/peri-sockserve
+        (Perinci::Gen::ForModule).
+
+
 0.06    2012-08-01 (SHARYANTO)
 
         [BUG FIXES]
