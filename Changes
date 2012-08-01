@@ -1,5 +1,14 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.06    2012-08-01 (SHARYANTO)
+
+        [BUG FIXES]
+
+        - pipe server: need to make stdout hot ($|++).
+
+        - pipe server: forgot to send J<num> in response.
+
+
 0.05    2012-08-01 (SHARYANTO)
 
         - Rename dist from Perinci-Access-TCP-Client to
