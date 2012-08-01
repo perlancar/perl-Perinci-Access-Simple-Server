@@ -23,6 +23,8 @@ has _pa => (             # Perinci::Access::InProcess object
 
 my $json = JSON->new->allow_nonref;
 
+$|++;
+
 # default handler
 
 sub handle {
@@ -36,16 +38,21 @@ sub handle {
 sub send_response {
     my $self = shift;
     my $res = $self->res // [500, "BUG: Response not set"];
-    print $json->encode($res), "\015\012";
+    $log->tracef("Sending response to stdout: %s", $res);
+    my $res_json = $json->encode($res);
+    print "J", length($res_json), "\015\012", $res_json, "\015\012";
 }
 
 sub run {
     my $self = shift;
     my $last;
 
+    $log->tracef("Starting loop ...");
+
   REQ:
     while (1) {
         my $line = <STDIN>;
+        $log->tracef("Read line from stdin: %s", $line);
         last REQ unless defined($line);
         my $req_json;
         if ($line =~ /\Aj(.*)/) {
@@ -58,6 +65,7 @@ sub run {
             $last++;
             goto RES;
         }
+        $log->tracef("Read JSON from stdin: %s", $req_json);
         my $req;
         eval { $req = $json->decode($req_json) };
         my $e = $@;
