@@ -1,4 +1,4 @@
-package Perinci::Access::TCP::Server;
+package Perinci::Access::Simple::Server::Socket;
 
 use 5.010;
 use strict;
@@ -8,14 +8,13 @@ use Log::Any '$log';
 # VERSION
 
 use File::HomeDir;
+use IO::Handle::Record; # to get peercred() in IO::Socket::UNIX
 use IO::Select;
 use IO::Socket qw(:crlf);
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use JSON;
 use Perinci::Access;
-use Perinci::Sub::property::result_postfilter;
-use Perinci::Sub::property::timeout;
 use SHARYANTO::Proc::Daemon::Prefork;
 use Time::HiRes qw(gettimeofday tv_interval);
 use URI::Escape;
@@ -106,6 +105,17 @@ sub BUILD {
     }
 }
 
+sub DESTROY {
+    my $self = shift;
+
+    my $socks = $self->unix_sockets;
+    if (defined($socks)) {
+        for my $sock (@$socks) {
+            unlink $sock;
+        }
+    }
+}
+
 sub run {
     my ($self) = @_;
     $self->_daemon->run;
@@ -143,6 +153,7 @@ sub _after_init {
 
     $ary = $self->unix_sockets;
     if (defined($ary) && ref($ary) ne 'ARRAY') { $ary = [split /\s*,\s*/,$ary] }
+    $self->unix_sockets($ary);
     for my $path (@$ary) {
         my %args;
         $args{Listen}  = 1;
@@ -157,6 +168,7 @@ sub _after_init {
 
     $ary = $self->ports;
     if (defined($ary) && ref($ary) ne 'ARRAY') { $ary = [split /\s*,\s*/,$ary] }
+    $self->ports($ary);
     for my $port (@$ary) {
         my %args;
         $args{Listen}  = 1;
@@ -456,15 +468,15 @@ sub access_log {
 }
 
 1;
-# ABSTRACT: A Riap::TCP implementation for Perl
+# ABSTRACT: Implement Riap::Simple server over sockets
 
 =head1 SYNOPSIS
 
  #!/usr/bin/perl
- use Perinci::Access::TCP::Server;
- my $server = Perinci::Access::TCP::Server->new(
+ use Perinci::Access::Simple::Server::Socket;
+ my $server = Perinci::Access::Simple::Server::Socket->new(
      ports                   => ['127.0.0.1:5678'],             # default none
-     unix_sockets            => ['/var/run/riap-tcp.sock'],     # default none
+     unix_sockets            => ['/var/run/riap-simple.sock'],  # default none
      #start_servers          => 0,                # default 3, 0=don't prefork
      #max_clients            => 0,                # default 3, 0=don't prefork
      #max_requests_per_child => 100,                            # default 1000
@@ -472,15 +484,15 @@ sub access_log {
  );
  $server->run;
 
-Or use using the included peri-tcpserve script:
+Or use using the included peri-sockserve script:
 
- % peri-tcpserve -p 127.0.0.1:5678 -s /path/to/unix/sock Foo::Bar Baz::*
+ % peri-sockserve -p 127.0.0.1:5678 -s /path/to/unix/sock Foo::Bar Baz::*
 
 
 =head1 DESCRIPTION
 
-This module implements L<Riap::TCP>. Its features preforking, multiple interface
-and Unix sockets.
+This module implements L<Riap::Simple> server over sockets. It features
+preforking, multiple interface and Unix sockets.
 
 This module uses L<Log::Any> for logging.
 
@@ -570,7 +582,7 @@ Number of requests each child will serve until it exists.
 
 =for Pod::Coverage BUILD
 
-=head2 $server = Perinci::Access::TCP::Server->new(%args)
+=head2 $server = Perinci::Access::Simple::Server::Socket->new(%args)
 
 Create a new instance of server. %args can be used to set attributes.
 
@@ -607,8 +619,10 @@ Write access log entry.
 
 =head1 SEE ALSO
 
-L<Riap::TCP>, L<Riap>, L<Rinci>
+L<Riap::Simple>, L<Riap>, L<Rinci>
 
-L<peri-tcpserve>, simple command-line interface for this module.
+L<peri-sockserve>, simple command-line interface for this module.
+
+L<Perinci::Access::Simple::Client>, L<Perinci::Access>
 
 =cut

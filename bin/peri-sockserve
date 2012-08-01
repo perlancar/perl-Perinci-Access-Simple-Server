@@ -8,7 +8,7 @@ use Log::Any qw($log);
 use File::HomeDir;
 use Module::List qw(list_modules);
 use Module::Load;
-use Perinci::Access::TCP::Server;
+use Perinci::Access::Simple::Server::Socket;
 use Perinci::CmdLine ();
 use Perinci::Gen::ForModule qw(gen_meta_for_module);
 
@@ -18,21 +18,21 @@ our %SPEC;
 
 $SPEC{serve} = {
     v => 1.1,
-    summary => 'Serve Perl modules using Riap::TCP protocol',
+    summary => 'Serve Perl modules using Riap::Simple protocol over sockets',
     description => <<'_',
 
-This is a simple command-line front-end for Perinci::Acces::TCP::Server, for
-making Perl modules accessible over TCP port (or Unix socket), using the
-Riap::TCP protocol. First the specified Perl modules will be loaded. Modules
-which do not contain Rinci metadata will be equipped with metadata using
-Perinci::Sub::Gen::ForModule. Perl modules not specified in the command-line
-arguments will not be accessible, since Perinci::Access::InProcess is used with
-load=>0.
+This is a simple command-line front-end for
+Perinci::Acces::Simple::Server::Socket, for making Perl modules accessible over
+TCP or Unix socket, using the Riap::Simple protocol. First the specified Perl
+modules will be loaded. Modules which do not contain Rinci metadata will be
+equipped with metadata using Perinci::Sub::Gen::ForModule. Perl modules not
+specified in the command-line arguments will not be accessible, since
+Perinci::Access::InProcess is used with load=>0.
 
 Modules can be accessed with Riap clients such as Perinci::Access using URL:
 
- riap+tcp://HOSTNAME:PORT/MODULE/SUBMOD/FUNCTION
- riap+tcp:UNIX_SOCKET_PATH/MODULE/SUBMOD/FUNCTION
+ riap+tcp://HOST:PORT/MODULE/SUBMOD/FUNCTION
+ riap+unix:UNIX_SOCKET_PATH//MODULE/SUBMOD/FUNCTION
 
 _
     args => {
@@ -54,18 +54,20 @@ _
             summary => 'Path for access log file',
             description => <<'_',
 
-Default is ~/peri-tcpserve-access.log
+Default is ~/peri-sockserve-access.log
 
 _
         },
         ports => {
             schema => 'str*',
-            summary => 'Will be passed to Perinci::Access::TCP::Server',
+            summary =>
+                'Will be passed to Perinci::Access::Simple::Server::Socket',
             cmdline_aliases => {p=>{}},
         },
         unix_sockets => {
             schema => 'str*',
-            summary => 'Will be passed to Perinci::Access::TCP::Server',
+            summary =>
+                'Will be passed to Perinci::Access::Simple::Server::Socket',
             cmdline_aliases => {s=>{}},
         },
         daemonize => {
@@ -89,7 +91,7 @@ sub serve {
         unless $args{ports} || $args{unix_sockets};
 
     my $access_log_path = $args{access_log_path} //
-        File::HomeDir->my_home . "/peri-tcpserve-access.log";
+        File::HomeDir->my_home . "/peri-sockserve-access.log";
 
     my @modules;
     for my $m (@{$args{modules}}) {
@@ -108,7 +110,7 @@ sub serve {
         gen_meta_for_module(module=>$m, load=>0);
     }
 
-    my $server = Perinci::Access::TCP::Server->new(
+    my $server = Perinci::Access::Simple::Server::Socket->new(
         ports           => $args{ports},
         unix_sockets    => $args{unix_sockets},
         daemonize       => $args{daemonize} // 0,
@@ -124,13 +126,13 @@ sub serve {
 Perinci::CmdLine->new(url => '/main/serve')->run;
 
 1;
-#ABSTRACT: Serve Perl modules using the Riap::TCP protocol
-#PODNAME: peri-tcpserver
+#ABSTRACT: Serve Perl modules using the Riap::Simple protocol over sockets
+#PODNAME: peri-sockserve
 
 =head1 SYNOPSIS
 
  # serve modules
- % peri-tcpserve -p 127.0.0.1:5678 -s /path/to/unix/sock Foo::Bar Baz::*
+ % peri-sockserve -p 127.0.0.1:5678 -s /path/to/unix/sock Foo::Bar Baz::*
 
  # access the server
  % perl -MPerinci::Access -e'
@@ -140,13 +142,13 @@ Perinci::CmdLine->new(url => '/main/serve')->run;
      my $res = $pa->request(meta=>"riap+tcp:path/to/unix/sock//Baz/Qux/func2");'
 
  # see more options
- % peri-tcpserve --help
+ % peri-sockserve --help
 
 
 =head1 SEE ALSO
 
-L<Riap::TCP>, L<Riap>, L<Rinci>
+L<Riap::Simple>, L<Riap>, L<Rinci>
 
-L<Perinci::Access::TCP::Client>, L<Perinci::Access>
+L<Perinci::Access::Simple::Client>, L<Perinci::Access>
 
 =cut
