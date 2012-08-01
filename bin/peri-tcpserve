@@ -71,7 +71,7 @@ _
         daemonize => {
             schema => ['bool' => {default=>0}],
             summary => 'If true, will daemonize into background',
-            arg_aliases => {D=>{}},
+            cmdline_aliases => {D=>{}},
         },
         fork => {
             schema => ['bool' => {default=>1}],
