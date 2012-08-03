@@ -22,7 +22,7 @@ use URI::Escape;
 
 use Moo;
 
-our $cleaner = Data::Clean::JSON->new;
+our $cleanser = Data::Clean::JSON->new;
 
 has name                   => (
     is => 'rw',
@@ -284,7 +284,7 @@ sub _main_loop {
 
               FINISH_REQ:
                 $self->_daemon->update_scoreboard({state => "W"});
-                $cleaner->clean_in_place($self->{_res});
+                $cleanser->clean_in_place($self->{_res});
                 eval { $self->{_res_json} = $json->encode($self->{_res}) };
                 $e = $@;
                 if ($e) {
