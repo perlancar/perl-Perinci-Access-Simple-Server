@@ -1,5 +1,11 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.08    2012-08-03 (SHARYANTO)
+
+        No functional changes. Replace Perinci::Sub::property::result_postfilter
+        with Data::Clean::JSON.
+
+
 0.07    2012-08-01 (SHARYANTO)
 
         No functional changes. Add missing dependency for bin/peri-sockserve
