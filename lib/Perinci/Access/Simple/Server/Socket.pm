@@ -243,14 +243,19 @@ sub _main_loop {
                     #$log->tracef("buf=%s (%d bytes)", $buf, length($buf));
                     if ($buf =~ /\Aj(.*)\015?\012/) {
                         $self->{_req_json} = $1;
+                        $log->tracef("Received JSON from client: %s",
+                                     $self->{_req_json});
                         $buf = substr($buf, 1+length($1));
                         last READ_REQ;
                     } elsif ($buf =~ /\AJ(\d+)(\015?\012)(.+)\015?\012/s
                                  && length($3) >= $1) {
                         $self->{_req_json} = substr($3, 0, $1);
+                        $log->tracef("Received JSON from client: %s",
+                                     $self->{_req_json});
                         $buf = substr($buf, 1+length($1)+length($2)+length($3));
                         last READ_REQ;
-                    } elsif ($buf =~ /\A[^jJ].*/) {
+                    } elsif ($buf =~ /\A([^jJ].*)/) {
+                        $log->tracef("Received from client: %s", $1);
                         $self->{_finish_req_time} = [gettimeofday];
                         $self->{_res} = [400, "Invalid request line"];
                         $buf =~ s/\A.+//;
@@ -286,7 +291,7 @@ sub _main_loop {
                 $e = $@;
                 if ($e) {
                     $self->{_res} = [500, "Can't encode result in JSON: $e"];
-                    $res = $json->encode($self->{_res});
+                    $self->{_res_json} = $json->encode($self->{_res});
                 }
                 $self->_write_sock($sock, "J" . length($self->{_res_json}).
                                        "\015\012");
