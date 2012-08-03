@@ -7,6 +7,7 @@ use Log::Any '$log';
 
 # VERSION
 
+use Data::Clean::JSON;
 use JSON;
 
 use Moo;
@@ -22,6 +23,7 @@ has _pa => (             # Perinci::Access::InProcess object
     });
 
 my $json = JSON->new->allow_nonref;
+my $cleaner = Data::Clean::JSON->new;
 
 $|++;
 
@@ -39,6 +41,7 @@ sub send_response {
     my $self = shift;
     my $res = $self->res // [500, "BUG: Response not set"];
     $log->tracef("Sending response to stdout: %s", $res);
+    $cleaner->clean_in_place($res);
     my $res_json = $json->encode($res);
     print "J", length($res_json), "\015\012", $res_json, "\015\012";
 }

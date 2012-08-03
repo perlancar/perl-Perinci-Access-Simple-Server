@@ -7,6 +7,7 @@ use Log::Any '$log';
 
 # VERSION
 
+use Data::Clean::JSON;
 use File::HomeDir;
 use IO::Handle::Record; # to get peercred() in IO::Socket::UNIX
 use IO::Select;
@@ -20,6 +21,8 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use URI::Escape;
 
 use Moo;
+
+our $cleaner = Data::Clean::JSON->new;
 
 has name                   => (
     is => 'rw',
@@ -51,11 +54,6 @@ has _pa                    => (             # Perinci::Access object
                 pl => Perinci::Access::InProcess->new(
                     load => 0,
                     extra_wrapper_convert => {
-                        result_postfilter => {
-                            re   => 'str',
-                            date => 'epoch',
-                            code => 'str',
-                        },
                         #timeout => 300,
                     },
                     #use_tx            => $self->{use_tx},
@@ -286,7 +284,7 @@ sub _main_loop {
 
               FINISH_REQ:
                 $self->_daemon->update_scoreboard({state => "W"});
-                my $res;
+                $cleaner->clean_in_place($self->{_res});
                 eval { $self->{_res_json} = $json->encode($self->{_res}) };
                 $e = $@;
                 if ($e) {
