@@ -1,5 +1,11 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.09    2012-08-03 (SHARYANTO)
+
+        No functional changes. Add main module Perinci::Access::Simple::Server
+        to avoid confusion.
+
+
 0.08    2012-08-03 (SHARYANTO)
 
         No functional changes. Replace Perinci::Sub::property::result_postfilter
