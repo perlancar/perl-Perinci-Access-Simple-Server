@@ -79,6 +79,13 @@ _
             schema => ['bool' => {default=>1}],
             summary => 'Set to false to disable forking',
         },
+        library => {
+            schema => ['array' => {
+                of => 'str*',
+            }],
+            summary => 'Add directory to library search path, a la Perl\'s -I',
+            cmdline_aliases => {I=>{}},
+        },
     },
 };
 sub serve {
@@ -92,6 +99,11 @@ sub serve {
 
     my $access_log_path = $args{access_log_path} //
         File::HomeDir->my_home . "/peri-sockserve-access.log";
+
+    for my $dir (@{ $args{library} // [] }) {
+        require lib;
+        lib->import($dir);
+    }
 
     my @modules;
     for my $m (@{$args{modules}}) {
