@@ -5,8 +5,11 @@ use strict;
 use warnings;
 use Test::More 0.96;
 
+use Cwd;
 use Perinci::Access::Simple::Client;
-use Perinci::Examples;
+
+diag "cwd: ", getcwd();
+diag "bin/peri-pipe executable accessible? ", ((-x "bin/peri-pipe") ? 1:0);
 
 my $pa  = Perinci::Access::Simple::Client->new;
 my $res = $pa->request(
