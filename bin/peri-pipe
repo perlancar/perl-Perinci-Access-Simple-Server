@@ -3,11 +3,18 @@
 use 5.010;
 use strict;
 use warnings;
-use Log::Any::App '$log';
 
 # VERSION
 
-use Perinci::Access::Simple::Server::Pipe;
+if ($ENV{AUTOMATIC_TESTING}) {
+    warn "AUTOMATIC_TESTING is set to true. To avoid failing CPAN Testers ".
+        "report, this script refuses to run under that env.\n";
+    exit 0;
+}
+
+require Perinci::Access::Simple::Server::Pipe;
+require Log::Any::App;
+Log::Any::App::init();
 
 Perinci::Access::Simple::Server::Pipe->new->run;
 
