@@ -1,37 +1,42 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.13    2012-09-08 (SHARYANTO)
+
+        - Replace Perinci::Access::InProcess with ::Perl and ::Schemeless.
+
+
 0.12    2012-08-16 (SHARYANTO)
 
-        No functional changes. A second attempt to fix test (another case of
-        calling the correct Perl interpreter).
+        - No functional changes. A second attempt to fix test (another case of
+          calling the correct Perl interpreter).
 
 
 0.11    2012-08-15 (SHARYANTO)
 
-        No functional changes. Add some workaround to avoid failing tests.
+        - No functional changes. Add some workaround to avoid failing tests.
 
 
 0.10    2012-08-10 (SHARYANTO)
 
-        No functional changes. Update dependencies.
+        - No functional changes. Update dependencies.
 
 
 0.09    2012-08-03 (SHARYANTO)
 
-        No functional changes. Add main module Perinci::Access::Simple::Server
-        to avoid confusion.
+        - No functional changes. Add main module Perinci::Access::Simple::Server
+          to avoid confusion.
 
 
 0.08    2012-08-03 (SHARYANTO)
 
-        No functional changes. Replace Perinci::Sub::property::result_postfilter
-        with Data::Clean::JSON.
+        - No functional changes. Replace Perinci::Sub::property::result_postfilter
+          with Data::Clean::JSON.
 
 
 0.07    2012-08-01 (SHARYANTO)
 
-        No functional changes. Add missing dependency for bin/peri-sockserve
-        (Perinci::Gen::ForModule).
+        - No functional changes. Add missing dependency for bin/peri-sockserve
+          (Perinci::Gen::ForModule).
 
 
 0.06    2012-08-01 (SHARYANTO)
@@ -57,12 +62,12 @@ Revision history for Perinci-Access-Simple-Server
 
 0.04    2012-07-25 (SHARYANTO)
 
-        Fix: don't mix buffered and unbuffered I/O, use unbuffered.
+        - Fix: don't mix buffered and unbuffered I/O, use unbuffered.
 
 
 0.03    2012-07-20 (SHARYANTO)
 
-        No functional changes. Add missing deps [CT].
+        - No functional changes. Add missing deps [CT].
 
 
 0.02    2012-07-19 (SHARYANTO)
@@ -78,4 +83,4 @@ Revision history for Perinci-Access-Simple-Server
 
 0.01    2012-07-19 (SHARYANTO)
 
-        First release, proof of concept.
+        - First release, proof of concept.
