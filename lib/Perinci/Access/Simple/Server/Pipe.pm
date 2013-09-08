@@ -1,6 +1,6 @@
 package Perinci::Access::Simple::Server::Pipe;
 
-use 5.010;
+use 5.010001;
 use strict;
 use warnings;
 use Log::Any '$log';
@@ -14,12 +14,12 @@ use Moo;
 
 has req => (is => 'rw'); # current Riap request
 has res => (is => 'rw'); # current Riap response
-has _pa => (             # Perinci::Access::InProcess object
+has _pa => (
     is => 'rw',
     lazy => 1,
     default => sub {
-        require Perinci::Access::InProcess;
-        Perinci::Access::InProcess->new();
+        require Perinci::Access::Schemeless;
+        Perinci::Access::Schemeless->new();
     });
 
 my $json = JSON->new->allow_nonref;
@@ -121,7 +121,7 @@ This module is a class for creating L<Riap::Simple> server over pipe. Riap
 requests will be read from STDIN, and response sent to STDOUT.
 
 By default, the L<handle()> method processes the Riap request using
-L<Perinci::Access::InProcess>. You can customize this by overriding the method.
+L<Perinci::Access::Schemeless>. You can customize this by overriding the method.
 The Riap request is in C<req>. Method should set C<res> to the Riap response.
 
 This module uses L<Log::Any> for logging.
@@ -152,7 +152,7 @@ response to STDOUT. Riap request will be put to C<req> attribute.
 =head2 handle()
 
 The method that will be called by run() to set C<res> attribute. By default it
-will pass the request to L<Perinci::Access::InProcess>. You can override this
+will pass the request to L<Perinci::Access::Schemeless>. You can override this
 method to provide custom behavior.
 
 =head2 send_response()

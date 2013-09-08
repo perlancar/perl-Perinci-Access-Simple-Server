@@ -27,7 +27,7 @@ TCP or Unix socket, using the Riap::Simple protocol. First the specified Perl
 modules will be loaded. Modules which do not contain Rinci metadata will be
 equipped with metadata using Perinci::Sub::Gen::ForModule. Perl modules not
 specified in the command-line arguments will not be accessible, since
-Perinci::Access::InProcess is used with load=>0.
+Perinci::Access::Perl is used with load=>0.
 
 Modules can be accessed with Riap clients such as Perinci::Access using URL:
 
