@@ -1,6 +1,12 @@
 Revision history for Perinci-Access-Simple-Server
 
-0.13    2012-09-08 (SHARYANTO)
+0.14    2013-10-15 (SHARYANTO)
+
+        - Use Data::Clean::FromJSON because JSON produces JSON::{PP,XS}::Boolean
+          objects that currently trip Data::Sah-generated validator code.
+
+
+0.13    2013-09-08 (SHARYANTO)
 
         - Replace Perinci::Access::InProcess with ::Perl and ::Schemeless.
 
