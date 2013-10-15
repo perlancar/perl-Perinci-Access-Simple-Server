@@ -7,6 +7,7 @@ use Log::Any '$log';
 
 # VERSION
 
+use Data::Clean::FromJSON;
 use Data::Clean::JSON;
 use JSON;
 
@@ -22,8 +23,9 @@ has _pa => (
         Perinci::Access::Schemeless->new();
     });
 
-my $json = JSON->new->allow_nonref;
-my $cleanser = Data::Clean::JSON->new;
+my $json       = JSON->new->allow_nonref;
+my $cleanser   = Data::Clean::JSON->get_cleanser;
+my $cleanserfj = Data::Clean::FromJSON->get_cleanser;
 
 $|++;
 
@@ -70,7 +72,10 @@ sub run {
         }
         $log->tracef("Read JSON from stdin: %s", $req_json);
         my $req;
-        eval { $req = $json->decode($req_json) };
+        eval {
+            $req = $json->decode($req_json);
+            $cleanserfj->clean_in_place($req);
+        };
         my $e = $@;
         if ($e) {
             #$self->res([400, "Invalid JSON ($e)"]);

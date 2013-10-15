@@ -7,6 +7,7 @@ use Log::Any '$log';
 
 # VERSION
 
+use Data::Clean::FromJSON;
 use Data::Clean::JSON;
 use File::HomeDir;
 use IO::Handle::Record; # to get peercred() in IO::Socket::UNIX
@@ -22,7 +23,8 @@ use URI::Escape;
 
 use Moo;
 
-our $cleanser = Data::Clean::JSON->new;
+my $cleanser   = Data::Clean::JSON->get_cleanser;
+my $cleanserfj = Data::Clean::FromJSON->get_cleanser;
 
 has name                   => (
     is => 'rw',
@@ -273,7 +275,10 @@ sub _main_loop {
                 }
                 $self->{_finish_req_time} = [gettimeofday];
 
-                eval { $self->{_req} = $json->decode($self->{_req_json}) };
+                eval {
+                    $self->{_req} = $json->decode($self->{_req_json});
+                    $cleanserfj->clean_in_place($self->{_req});
+                };
                 my $e = $@;
                 if ($e) {
                     $self->{_res} = [400, "Invalid JSON ($e)"];
