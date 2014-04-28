@@ -56,7 +56,7 @@ has _pa                    => (             # Perinci::Access object
             handlers => {
                 pl => Perinci::Access::Perl->new(
                     load => 0,
-                    extra_wrapper_convert => {
+                    set_function_properties => {
                         #timeout => 300,
                     },
                     #use_tx            => $self->{use_tx},
@@ -64,7 +64,7 @@ has _pa                    => (             # Perinci::Access object
                 ),
                 '' => Perinci::Access::Schemeless->new(
                     load => 0,
-                    extra_wrapper_convert => {
+                    set_function_properties => {
                         #timeout => 300,
                     },
                     #use_tx            => $self->{use_tx},
