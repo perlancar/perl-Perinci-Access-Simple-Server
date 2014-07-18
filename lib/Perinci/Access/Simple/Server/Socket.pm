@@ -47,7 +47,7 @@ has start_servers          => (is => 'rw', default => sub{3});
 has max_requests_per_child => (is => 'rw', default=>sub{1000});
 has _daemon                => (is => 'rw'); # SHARYANTO::Proc::Daemon::Prefork
 has _server_socks          => (is => 'rw'); # store server sockets
-has _pa                    => (             # Perinci::Access object
+has riap_client            => (             # Perinci::Access object
     is => 'rw',
     default => sub {
         require Perinci::Access::Perl;
@@ -291,7 +291,7 @@ sub _main_loop {
 
               RES:
                 $self->{_start_res_time}  = [gettimeofday];
-                $self->{_res} = $self->_pa->request(
+                $self->{_res} = $self->riap_client->request(
                     $self->{_req}{action} => $self->{_req}{uri},
                     $self->{_req});
                 $self->{_finish_res_time} = [gettimeofday];
