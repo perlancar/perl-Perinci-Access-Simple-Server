@@ -526,6 +526,10 @@ Name of server, for display in process table ('ps ax').
 
 Whether to daemonize (go into background).
 
+=head2 riap_client => OBJ
+
+L<Perinci::Access> (or compatible) instance.
+
 =head2 ports => ARRAY OF STR (default [])
 
 One or more TCP ports to listen to. Default is none. Each port can be in the

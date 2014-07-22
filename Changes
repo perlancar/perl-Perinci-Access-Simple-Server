@@ -1,5 +1,13 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.17     2014-07-22 (SHARYANTO)
+
+         - No functional changes.
+
+         - Switch CLI scripts from using Perinci::CmdLine to
+           Perinci::CmdLine::Any to reduce size of dependencies.
+
+
 0.16    2014-04-30 (SHARYANTO)
 
 	- No functional changes.
