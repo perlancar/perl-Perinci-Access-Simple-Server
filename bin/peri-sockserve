@@ -9,7 +9,7 @@ use File::HomeDir;
 use Module::List qw(list_modules);
 use Module::Load;
 use Perinci::Access::Simple::Server::Socket;
-use Perinci::CmdLine ();
+use Perinci::CmdLine::Any;
 use Perinci::Gen::ForModule qw(gen_meta_for_module);
 
 # VERSION
@@ -135,7 +135,7 @@ sub serve {
     [200, "OK"];
 }
 
-Perinci::CmdLine->new(url => '/main/serve')->run;
+Perinci::CmdLine::Any->new(url => '/main/serve')->run;
 
 1;
 #ABSTRACT: Serve Perl modules using the Riap::Simple protocol over sockets
