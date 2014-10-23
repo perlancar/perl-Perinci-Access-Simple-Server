@@ -1,15 +1,17 @@
 package Perinci::Access::Simple::Server::Pipe;
 
+# DATE
+# VERSION
+
 use 5.010001;
 use strict;
 use warnings;
 use Log::Any '$log';
 
-# VERSION
-
 use Data::Clean::FromJSON;
 use Data::Clean::JSON;
 use JSON;
+use Perinci::AccessUtil qw(insert_riap_stuffs_to_res);
 
 use Moo;
 
@@ -23,7 +25,7 @@ has riap_client => (
         Perinci::Access::Schemeless->new();
     });
 
-my $json       = JSON->new->allow_nonref;
+my $json       = JSON->new->allow_nonref->canonical;
 my $cleanser   = Data::Clean::JSON->get_cleanser;
 my $cleanserfj = Data::Clean::FromJSON->get_cleanser;
 
@@ -43,6 +45,8 @@ sub send_response {
     my $self = shift;
     my $res = $self->res // [500, "BUG: Response not set"];
     $log->tracef("Sending response to stdout: %s", $res);
+    my $v = $self->req->{v} // 1.1;
+    insert_riap_stuffs_to_res($res, $v);
     $cleanser->clean_in_place($res);
     my $res_json = $json->encode($res);
     print "J", length($res_json), "\015\012", $res_json, "\015\012";
