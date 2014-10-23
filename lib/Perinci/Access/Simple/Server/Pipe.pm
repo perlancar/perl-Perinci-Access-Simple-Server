@@ -11,7 +11,7 @@ use Log::Any '$log';
 use Data::Clean::FromJSON;
 use Data::Clean::JSON;
 use JSON;
-use Perinci::AccessUtil qw(insert_riap_stuffs_to_res);
+use Perinci::AccessUtil qw(insert_riap_stuffs_to_res decode_args_in_riap_req);
 
 use Moo;
 
@@ -79,6 +79,7 @@ sub run {
         eval {
             $req = $json->decode($req_json);
             $cleanserfj->clean_in_place($req);
+            decode_args_in_riap_req($req);
         };
         my $e = $@;
         if ($e) {

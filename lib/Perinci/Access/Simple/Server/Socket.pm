@@ -17,6 +17,7 @@ use IO::Socket::INET;
 use IO::Socket::UNIX;
 use JSON;
 use Perinci::Access;
+use Perinci::AccessUtil qw(insert_riap_stuffs_to_res decode_args_in_riap_req);
 use SHARYANTO::Proc::Daemon::Prefork;
 use Time::HiRes qw(gettimeofday tv_interval);
 use URI::Escape;
@@ -278,6 +279,7 @@ sub _main_loop {
                 eval {
                     $self->{_req} = $json->decode($self->{_req_json});
                     $cleanserfj->clean_in_place($self->{_req});
+                    decode_args_in_riap_req($req);
                 };
                 my $e = $@;
                 if ($e) {
@@ -298,6 +300,7 @@ sub _main_loop {
 
               FINISH_REQ:
                 $self->_daemon->update_scoreboard({state => "W"});
+                insert_riap_stuffs_to_res($res, $req->{v});
                 $cleanser->clean_in_place($self->{_res});
                 eval { $self->{_res_json} = $json->encode($self->{_res}) };
                 $e = $@;

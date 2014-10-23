@@ -21,7 +21,7 @@ subtest "v1.1" => sub {
         or diag explain $res;
 };
 
-subtest "v1.2 (autoencoding of binary result)" => sub {
+subtest "v1.2 (autodecoding+encoding of binary result)" => sub {
     my $srv = Perinci::Access::Simple::Server::Pipe->new;
     $srv->req({v=>1.2, action=>"call",
                uri=>"/Perinci/Examples/test_binary", args=>{}});
