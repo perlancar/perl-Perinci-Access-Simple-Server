@@ -1,5 +1,13 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.19    2014-11-07 (PERLANCAR)
+
+	- Use clone_and_clean() for cleaning results instead of
+	  clean_in_place() for safety, function might return references to
+	  persistent object/data etc (e.g. for debugging) that we don't
+	  want to clean.
+
+
 0.18     2014-10-23 (PERLANCAR)
 
          - Add Riap 1.2 support (decoding of base64-encoded args and
