@@ -278,7 +278,7 @@ sub _main_loop {
 
                 eval {
                     $self->{_req} = $json->decode($self->{_req_json});
-                    $cleanserfj->clean_in_place($self->{_req});
+                    $cleanserfj->clone_and_clean($self->{_req});
                     decode_args_in_riap_req($self->{_req});
                 };
                 my $e = $@;
@@ -301,7 +301,7 @@ sub _main_loop {
               FINISH_REQ:
                 $self->_daemon->update_scoreboard({state => "W"});
                 insert_riap_stuffs_to_res($self->{_res}, $self->{_req}{v});
-                $cleanser->clean_in_place($self->{_res});
+                $self->{_res} = $cleanser->clone_and_clean($self->{_res});
                 eval { $self->{_res_json} = $json->encode($self->{_res}) };
                 $e = $@;
                 if ($e) {

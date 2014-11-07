@@ -47,7 +47,7 @@ sub send_response {
     $log->tracef("Sending response to stdout: %s", $res);
     my $v = $self->req->{v} // 1.1;
     insert_riap_stuffs_to_res($res, $v);
-    $cleanser->clean_in_place($res);
+    $res = $cleanser->clone_and_clean($res);
     my $res_json = $json->encode($res);
     print "J", length($res_json), "\015\012", $res_json, "\015\012";
 }
