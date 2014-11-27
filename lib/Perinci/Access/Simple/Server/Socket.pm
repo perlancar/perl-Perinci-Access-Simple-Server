@@ -514,10 +514,6 @@ Or use using the included peri-sockserve script:
 This module implements L<Riap::Simple> server over sockets. It features
 preforking, multiple interface and Unix sockets.
 
-This module uses L<Log::Any> for logging.
-
-This module uses L<Moo> for object system.
-
 
 =head1 ATTRIBUTES
 

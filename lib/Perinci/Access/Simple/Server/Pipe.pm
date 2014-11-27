@@ -134,10 +134,6 @@ By default, the L<handle()> method processes the Riap request using
 L<Perinci::Access::Schemeless>. You can customize this by overriding the method.
 The Riap request is in C<req>. Method should set C<res> to the Riap response.
 
-This module uses L<Log::Any> for logging.
-
-This module uses L<Moo> for object system.
-
 
 =head1 ATTRIBUTES
 
