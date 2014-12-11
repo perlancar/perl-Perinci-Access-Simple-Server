@@ -1,5 +1,12 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.20    2014-12-11 (PERLANCAR)
+
+	- No functional changes.
+
+	- Use new name of renamed module {SHARYANTO-,}Proc-Daemon-Prefork.
+
+
 0.19    2014-11-07 (PERLANCAR)
 
 	- Use clone_and_clean() for cleaning results instead of
