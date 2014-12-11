@@ -18,7 +18,7 @@ use IO::Socket::UNIX;
 use JSON;
 use Perinci::Access;
 use Perinci::AccessUtil qw(insert_riap_stuffs_to_res decode_args_in_riap_req);
-use SHARYANTO::Proc::Daemon::Prefork;
+use Proc::Daemon::Prefork;
 use Time::HiRes qw(gettimeofday tv_interval);
 use URI::Escape;
 
@@ -46,7 +46,7 @@ has require_root           => (is => 'rw', default => sub{0});
 has max_clients            => (is => 'rw', default => sub{150});
 has start_servers          => (is => 'rw', default => sub{3});
 has max_requests_per_child => (is => 'rw', default=>sub{1000});
-has _daemon                => (is => 'rw'); # SHARYANTO::Proc::Daemon::Prefork
+has _daemon                => (is => 'rw'); # Proc::Daemon::Prefork
 has _server_socks          => (is => 'rw'); # store server sockets
 has riap_client            => (             # Perinci::Access object
     is => 'rw',
@@ -97,7 +97,7 @@ sub BUILD {
         $self->pid_path($run_dir."/".$self->name.".pid");
     }
     unless ($self->_daemon) {
-        my $daemon = SHARYANTO::Proc::Daemon::Prefork->new(
+        my $daemon = Proc::Daemon::Prefork->new(
             name                    => $self->name,
             error_log_path          => $self->error_log_path,
             access_log_path         => $self->access_log_path,
@@ -558,7 +558,7 @@ Socket timeout. Will be passed to IO::Socket.
 
 Whether to require running as root.
 
-Passed to L<SHARYANTO::Proc::Daemon::Prefork>'s constructor.
+Passed to L<Proc::Daemon::Prefork>'s constructor.
 
 =head2 pid_path => STR (default /var/run/<name>.pid or ~/<name>.pid)
 
