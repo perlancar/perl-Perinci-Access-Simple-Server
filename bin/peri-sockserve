@@ -139,7 +139,7 @@ Perinci::CmdLine::Any->new(url => '/main/serve')->run;
 
 1;
 #ABSTRACT: Serve Perl modules using the Riap::Simple protocol over sockets
-#PODNAME: peri-sockserve
+#PODNAME:
 
 =head1 SYNOPSIS
 

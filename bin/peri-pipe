@@ -14,7 +14,7 @@ Perinci::Access::Simple::Server::Pipe->new->run;
 
 1;
 #ABSTRACT: Default Riap::Simple server over pipe
-#PODNAME: peri-pipe
+#PODNAME:
 
 =head1 SYNOPSIS
 
