@@ -1,5 +1,8 @@
 #!perl
 
+# DATE
+# VERSION
+
 use 5.010;
 use strict;
 use warnings;
@@ -11,8 +14,6 @@ use Module::Load;
 use Perinci::Access::Simple::Server::Socket;
 use Perinci::CmdLine::Any;
 use Perinci::Gen::ForModule qw(gen_meta_for_module);
-
-# VERSION
 
 our %SPEC;
 
@@ -138,7 +139,7 @@ sub serve {
 Perinci::CmdLine::Any->new(url => '/main/serve')->run;
 
 1;
-#ABSTRACT: Serve Perl modules using the Riap::Simple protocol over sockets
+#ABSTRACT:
 #PODNAME:
 
 =head1 SYNOPSIS
