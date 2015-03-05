@@ -20,7 +20,7 @@ use JSON;
 use Perinci::Access;
 use Perinci::AccessUtil qw(insert_riap_stuffs_to_res decode_args_in_riap_req);
 use Proc::Daemon::Prefork;
-use Time::HiRes qw(gettimeofday tv_interval);
+use Time::HiRes qw(time);
 use URI::Escape;
 
 use Moo;
@@ -231,7 +231,7 @@ sub _main_loop {
             my $sock = $s->accept();
             # sock can be undef
             next unless $sock;
-            $self->{_connect_time}   = [gettimeofday];
+            $self->{_connect_time}   = time();
             $self->_set_label_serving($sock);
 
             my $timeout = ${*$sock}{'io_socket_timeout'};
@@ -246,9 +246,12 @@ sub _main_loop {
                     num_reqs => $i,
                     state => "R",
                 });
-                $self->{_start_req_time} = [gettimeofday];
+                $self->{_start_req_time} = time();
                 my $buf = $self->_sysreadline($sock, $timeout, $fdset);
-                $self->{_finish_req_time} = [gettimeofday];
+                say "D1";
+                last CONN unless defined $buf;
+
+                $self->{_finish_req_time} = time();
                 $log->tracef("Received line from client: %s", $buf);
 
                 if ($buf =~ /\Aj(.*)\015?\012/) {
@@ -275,11 +278,11 @@ sub _main_loop {
                 }
 
               RES:
-                $self->{_start_res_time}  = [gettimeofday];
+                $self->{_start_res_time}  = time();
                 $self->{_res} = $self->riap_client->request(
                     $self->{_req}{action} => $self->{_req}{uri},
                     $self->{_req});
-                $self->{_finish_res_time} = [gettimeofday];
+                $self->{_finish_res_time} = time();
 
               FINISH_REQ:
                 $self->_daemon->update_scoreboard({state => "W"});
@@ -295,7 +298,7 @@ sub _main_loop {
                 $self->access_log($sock);
                 $self->_daemon->update_scoreboard({state => "_"});
 
-                last CONN if $last;
+                last CONN if $last_child;
             } # while REQ
             $sock->close;
         } # for SOCK
@@ -309,14 +312,14 @@ sub _sysreadline {
 	my $n = select($fdset, undef, undef, $timeout);
 	unless ($n) {
 	    #$self->reason(defined($n) ? "Timeout" : "select: $!");
-	    return;
+	    return undef;
 	}
     }
     #print STDERR "sysread()\n" if $DEBUG;
     my $buf = "";
     while (1) {
-        sysread($sock, $buf, 2048, length($buf));
-        return $buf if $buf =~ /\012/;
+        my $n = sysread($sock, $buf, 2048, length($buf));
+        return $buf if $buf =~ /\012/ || !$n;
     }
 }
 
@@ -414,9 +417,8 @@ sub access_log {
     }
 
     my $reqt = sprintf("%.3fms",
-                       1000*tv_interval(
-                           $self->{_start_req_time},
-                           $self->{_finish_req_time}));
+                       1000*($self->{_finish_req_time}-
+                                 $self->{_start_req_time}));
 
     if (!$self->{_res}) {
         warn "BUG: No response generated";
@@ -431,8 +433,8 @@ sub access_log {
     my $rest;
     if ($self->{_finish_res_time}) {
         $rest = sprintf("%.3fms",
-                        1000*tv_interval($self->{_start_res_time},
-                                         $self->{_finish_res_time}));
+                        1000*($self->{_finish_res_time}-
+                                  $self->{_start_res_time}));
     } else {
         $rest = "-";
     }
