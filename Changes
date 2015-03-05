@@ -1,5 +1,10 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.21    2015-03-05 (PERLANCAR)
+
+	- Adjust to Riap 1.2.3 (drop support for the "J" header).
+
+
 0.20    2014-12-11 (PERLANCAR)
 
 	- No functional changes.
