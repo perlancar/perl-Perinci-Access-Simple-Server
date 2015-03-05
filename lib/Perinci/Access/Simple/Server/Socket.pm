@@ -222,6 +222,7 @@ sub _main_loop {
 
     my $sel = IO::Select->new(@{ $self->_server_socks });
 
+  CONN:
     for (my $i=1; $i<=$self->max_requests_per_child; $i++) {
         $self->_daemon->set_label("listening");
         my @ready = $sel->can_read();
@@ -230,14 +231,14 @@ sub _main_loop {
             my $sock = $s->accept();
             # sock can be undef
             next unless $sock;
-            $self->{_connect_time} = [gettimeofday];
+            $self->{_connect_time}   = [gettimeofday];
             $self->_set_label_serving($sock);
 
             my $timeout = ${*$sock}{'io_socket_timeout'};
             my $fdset = "";
             vec($fdset, $sock->fileno, 1) = 1;
-            my $buf = "";
 
+            my $last_child = 0;
           REQ:
             while (1) {
                 $self->_daemon->update_scoreboard({
@@ -245,25 +246,18 @@ sub _main_loop {
                     num_reqs => $i,
                     state => "R",
                 });
-
                 $self->{_start_req_time} = [gettimeofday];
+                my $buf = $self->_sysreadline($sock, $timeout, $fdset);
+                $self->{_finish_req_time} = [gettimeofday];
+                $log->tracef("Received line from client: %s", $buf);
 
-              READ_REQ:
                 if ($buf =~ /\Aj(.*)\015?\012/) {
                     $self->{_req_json} = $1;
-                    $log->tracef("Received JSON from client: %s",
-                                 $self->{_req_json});
-                    $buf = substr($buf, 1+length($1));
                 } else {
-                    $log->tracef("Received from client: %s", $1);
-                    $self->{_finish_req_time} = [gettimeofday];
                     $self->{_res} = [400, "Invalid request line"];
-                    $buf =~ s/\A.+//;
+                    $last_child++;
+                    goto FINISH_REQ;
                 }
-                    last REQ unless $self->_need_more(
-                        $sock, $buf, $timeout, $fdset);
-                }
-                $self->{_finish_req_time} = [gettimeofday];
 
                 eval {
                     $self->{_req} = $json->decode($self->{_req_json});
@@ -300,29 +294,30 @@ sub _main_loop {
                 $self->_write_sock($sock, "j".$self->{_res_json}."\015\012");
                 $self->access_log($sock);
                 $self->_daemon->update_scoreboard({state => "_"});
-            }
+
+                last CONN if $last;
+            } # while REQ
             $sock->close;
-        }
-    }
+        } # for SOCK
+    } # for CONN
 }
 
-sub _need_more {
-    my $self = shift;
-    my $sock = shift;
-    #my($buf,$timeout,$fdset) = @_;
-    if ($_[1]) {
-	my($timeout, $fdset) = @_[1,2];
+sub _sysreadline {
+    my ($self, $sock, $timeout, $fdset) = @_;
+    if ($timeout) {
 	#print STDERR "select(,,,$timeout)\n" if $DEBUG;
-	my $n = select($fdset,undef,undef,$timeout);
+	my $n = select($fdset, undef, undef, $timeout);
 	unless ($n) {
 	    #$self->reason(defined($n) ? "Timeout" : "select: $!");
 	    return;
 	}
     }
     #print STDERR "sysread()\n" if $DEBUG;
-    my $n = sysread($sock, $_[0], 2048, length($_[0]));
-    #$self->reason(defined($n) ? "Client closed" : "sysread: $!") unless $n;
-    $n;
+    my $buf = "";
+    while (1) {
+        sysread($sock, $buf, 2048, length($buf));
+        return $buf if $buf =~ /\012/;
+    }
 }
 
 sub _write_sock {
