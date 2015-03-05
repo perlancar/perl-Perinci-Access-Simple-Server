@@ -48,8 +48,7 @@ sub send_response {
     my $v = $self->req->{v} // 1.1;
     insert_riap_stuffs_to_res($res, $v);
     $res = $cleanser->clone_and_clean($res);
-    my $res_json = $json->encode($res);
-    print "J", length($res_json), "\015\012", $res_json, "\015\012";
+    print "j", $json->encode($res), "\015\012";
 }
 
 sub run {
@@ -66,11 +65,8 @@ sub run {
         my $req_json;
         if ($line =~ /\Aj(.*)/) {
             $req_json = $1;
-        } elsif ($line =~ /\AJ(\d+)/) {
-            read STDIN, $req_json, $1;
-            my $crlf = <STDIN>;
         } else {
-            $self->res([400, "Invalid request line, use J<num> or j<json>"]);
+            $self->res([400, "Invalid request line, use j<json>"]);
             $last++;
             goto RES;
         }

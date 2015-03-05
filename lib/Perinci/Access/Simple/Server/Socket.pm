@@ -1,11 +1,12 @@
 package Perinci::Access::Simple::Server::Socket;
 
+# DATE
+# VERSION
+
 use 5.010001;
 use strict;
 use warnings;
 use Log::Any '$log';
-
-# VERSION
 
 use Data::Clean::FromJSON;
 use Data::Clean::JSON;
@@ -246,31 +247,19 @@ sub _main_loop {
                 });
 
                 $self->{_start_req_time} = [gettimeofday];
+
               READ_REQ:
-                while (1) {
-                    # loop until we have the whole request in $buf
-                    $buf =~ s/\A(?:\015?\012)+//;  # ignore leading blank lines
-                    #$log->tracef("buf=%s (%d bytes)", $buf, length($buf));
-                    if ($buf =~ /\Aj(.*)\015?\012/) {
-                        $self->{_req_json} = $1;
-                        $log->tracef("Received JSON from client: %s",
-                                     $self->{_req_json});
-                        $buf = substr($buf, 1+length($1));
-                        last READ_REQ;
-                    } elsif ($buf =~ /\AJ(\d+)(\015?\012)(.+)\015?\012/s
-                                 && length($3) >= $1) {
-                        $self->{_req_json} = substr($3, 0, $1);
-                        $log->tracef("Received JSON from client: %s",
-                                     $self->{_req_json});
-                        $buf = substr($buf, 1+length($1)+length($2)+length($3));
-                        last READ_REQ;
-                    } elsif ($buf =~ /\A([^jJ].*)/) {
-                        $log->tracef("Received from client: %s", $1);
-                        $self->{_finish_req_time} = [gettimeofday];
-                        $self->{_res} = [400, "Invalid request line"];
-                        $buf =~ s/\A.+//;
-                        goto FINISH_REQ;
-                    }
+                if ($buf =~ /\Aj(.*)\015?\012/) {
+                    $self->{_req_json} = $1;
+                    $log->tracef("Received JSON from client: %s",
+                                 $self->{_req_json});
+                    $buf = substr($buf, 1+length($1));
+                } else {
+                    $log->tracef("Received from client: %s", $1);
+                    $self->{_finish_req_time} = [gettimeofday];
+                    $self->{_res} = [400, "Invalid request line"];
+                    $buf =~ s/\A.+//;
+                }
                     last REQ unless $self->_need_more(
                         $sock, $buf, $timeout, $fdset);
                 }
@@ -308,10 +297,7 @@ sub _main_loop {
                     $self->{_res} = [500, "Can't encode result in JSON: $e"];
                     $self->{_res_json} = $json->encode($self->{_res});
                 }
-                $self->_write_sock($sock, "J" . length($self->{_res_json}).
-                                       "\015\012");
-                $self->_write_sock($sock, $self->{_res_json});
-                $self->_write_sock($sock, "\015\012");
+                $self->_write_sock($sock, "j".$self->{_res_json}."\015\012");
                 $self->access_log($sock);
                 $self->_daemon->update_scoreboard({state => "_"});
             }
