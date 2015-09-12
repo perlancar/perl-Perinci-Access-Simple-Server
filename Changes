@@ -1,5 +1,11 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.23    2015-09-12 (PERLANCAR)
+
+	- Adjust to Perinci::AccessUtil 0.06 [RT#107050, thanks Slaven
+	  Rezic].
+
+
 0.22    2015-09-03 (PERLANCAR)
 
 	- No functional changes.
