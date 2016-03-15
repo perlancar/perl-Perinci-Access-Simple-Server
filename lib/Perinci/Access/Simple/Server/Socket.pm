@@ -16,7 +16,7 @@ use IO::Select;
 use IO::Socket qw(:crlf);
 use IO::Socket::INET;
 use IO::Socket::UNIX;
-use JSON;
+use JSON::MaybeXS;
 use Perinci::Access;
 use Perinci::AccessUtil qw(insert_riap_stuffs_to_res decode_args_in_riap_req);
 use Proc::Daemon::Prefork;
@@ -76,7 +76,7 @@ has riap_client            => (             # Perinci::Access object
         );
     });
 
-my $json = JSON->new->allow_nonref;
+my $json = JSON::MaybeXS->new->allow_nonref;
 
 sub BUILD {
     my ($self) = @_;

@@ -10,7 +10,7 @@ use Log::Any '$log';
 
 use Data::Clean::FromJSON;
 use Data::Clean::JSON;
-use JSON;
+use JSON::MaybeXS;
 use Perinci::AccessUtil qw(insert_riap_stuffs_to_res decode_args_in_riap_req);
 
 use Moo;
@@ -25,7 +25,7 @@ has riap_client => (
         Perinci::Access::Schemeless->new();
     });
 
-my $json       = JSON->new->allow_nonref->canonical;
+my $json       = JSON::MaybeXS->new->allow_nonref->canonical;
 my $cleanser   = Data::Clean::JSON->get_cleanser;
 my $cleanserfj = Data::Clean::FromJSON->get_cleanser;
 
