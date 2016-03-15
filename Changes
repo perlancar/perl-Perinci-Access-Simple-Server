@@ -1,5 +1,12 @@
 Revision history for Perinci-Access-Simple-Server
 
+0.24    2016-03-16 (PERLANCAR)
+
+	- No functional changes.
+
+	- Replace JSON with JSON::MaybeXS.
+
+
 0.23    2015-09-12 (PERLANCAR)
 
 	- Adjust to Perinci::AccessUtil 0.06 [RT#107050, thanks Slaven
