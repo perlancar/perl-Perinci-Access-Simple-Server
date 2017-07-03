@@ -6,7 +6,7 @@
 use 5.010;
 use strict;
 use warnings;
-use Log::Any qw($log);
+use Log::ger;
 
 use File::HomeDir;
 use Module::List qw(list_modules);
@@ -90,7 +90,7 @@ _
     },
 };
 sub serve {
-    $log->infof("Starting server ...");
+    log_info("Starting server ...");
     my %args = @_;
 
     return [400, "Please specify at least 1 module"]
@@ -115,9 +115,9 @@ sub serve {
             push @modules, $m;
         }
     }
-    $log->debugf("Modules to load: %s", \@modules);
+    log_debug("Modules to load: %s", \@modules);
     for my $m (@modules) {
-        $log->infof("Loading module %s ...", $m);
+        log_info("Loading module %s ...", $m);
         eval { load $m };
         return [500, "Failed to load module $m: $@"] if $@;
         gen_meta_for_module(module=>$m, load=>0);

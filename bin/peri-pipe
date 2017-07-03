@@ -1,14 +1,16 @@
 #!perl
 
-use 5.010;
+# DATE
+# VERSION
+
+use 5.010001;
 use strict;
 use warnings;
 
-# VERSION
+use Log::ger::LevelFromEnv;
+use Log::ger::Output 'Screen';
 
 require Perinci::Access::Simple::Server::Pipe;
-require Log::Any::App;
-Log::Any::App::init();
 
 Perinci::Access::Simple::Server::Pipe->new->run;
 
