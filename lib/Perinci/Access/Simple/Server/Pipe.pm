@@ -45,7 +45,7 @@ sub send_response {
     my $self = shift;
     my $res = $self->res // [500, "BUG: Response not set"];
     log_trace("Sending response to stdout: %s", $res);
-    my $v = $self->req->{v} // 1.1;
+    my $v = ($self->req ? $self->req->{v} : undef) // 1.1;
     insert_riap_stuffs_to_res($res, $v);
     $res = $cleanser->clone_and_clean($res);
     print "j", $json->encode($res), "\015\012";
