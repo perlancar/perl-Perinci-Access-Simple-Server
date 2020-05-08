@@ -248,7 +248,6 @@ sub _main_loop {
                 });
                 $self->{_start_req_time} = time();
                 my $buf = $self->_sysreadline($sock, $timeout, $fdset);
-                say "D1";
                 last CONN unless defined $buf;
 
                 $self->{_finish_req_time} = time();
